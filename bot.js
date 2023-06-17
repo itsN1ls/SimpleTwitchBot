@@ -2,7 +2,7 @@ const tmi = require('tmi.js');
 const fs = require('fs');
 const readline = require('readline');
 const axios = require('axios');
-require('dotenv').config();
+require('dotenv').config(); // Load environment variables from .env file
 
 const opts = {
   identity: {
@@ -10,20 +10,14 @@ const opts = {
     password: process.env.TOKEN
   },
   channels: [
-    'ccyamc'
+    'channel1',
+    'channel2'
   ]
 };
 
 const client = new tmi.client(opts);
 const customCommandsFile = 'custom_commands.json';
 let customCommands = [];
-
-function getAllCommands() {
-  const predefinedCommands = ['!doplay', '!lurk', '!unlurk'];
-  const customCommandNames = customCommands.map((command) => command.command);
-  const allCommands = [...predefinedCommands, ...customCommandNames].sort();
-  return allCommands;
-}
 
 // Load custom commands from file
 function loadCustomCommands() {
@@ -96,13 +90,11 @@ function onMessageHandler(target, context, msg, self) {
       if (args.length === 2) {
         const user = args[1];
 
-        axios
-          .get(`https://decapi.me/twitch/followage/${target.slice(1)}/${user}`)
+        axios.get(`https://decapi.me/twitch/followage/${target.slice(1)}/${user}`)
           .then((response) => {
             const followage = response.data;
             const followageMessage = `The followage of ${user} is ${followage}`;
-            client
-              .say(target, followageMessage)
+            client.say(target, followageMessage)
               .then(() => console.log('Followage command executed successfully!'))
               .catch((err) => console.error('Error executing followage command:', err));
           })
@@ -111,18 +103,15 @@ function onMessageHandler(target, context, msg, self) {
           });
       }
     } else if (commandName === '!doplay') {
-      client
-        .say(target, '!play 12')
+      client.say(target, '!play 12')
         .then(() => console.log('Response sent successfully!'))
         .catch((err) => console.error('Error sending response:', err));
     } else if (commandName === '!lurk') {
-      client
-        .say(target, 'imagine going away')
+      client.say(target, 'imagine going away')
         .then(() => console.log('Response sent successfully!'))
         .catch((err) => console.error('Error sending response:', err));
     } else if (commandName === '!unlurk') {
-      client
-        .say(target, 'you are finally here again')
+      client.say(target, 'you are finally here again')
         .then(() => console.log('Response sent successfully!'))
         .catch((err) => console.error('Error sending response:', err));
     } else if (commandName.startsWith('!love')) {
@@ -132,8 +121,7 @@ function onMessageHandler(target, context, msg, self) {
         const targetArgument = args[1];
         const lovePercentage = Math.floor(Math.random() * 101); // Random number from 0 to 100
         const response = `There is a ${lovePercentage}% chance of love between ${targetUser} and ${targetArgument}`;
-        client
-          .say(target, response)
+        client.say(target, response)
           .then(() => console.log('Response sent successfully!'))
           .catch((err) => console.error('Error sending response:', err));
       }
@@ -163,33 +151,12 @@ function onMessageHandler(target, context, msg, self) {
       }
     } else if (commandName.includes('tuesday')) {
       const updatedMessage = commandName.replace(/tuesday/gi, 'chewsday');
-      client
-        .say(target, updatedMessage)
+      client.say(target, updatedMessage)
         .then(() => console.log('Updated message sent successfully!'))
         .catch((err) => console.error('Error sending updated message:', err));
-    } else if (commandName === '!commands') {
-      const allCommands = getAllCommands();
-      const commandList = allCommands.join(', ');
-      client
-        .say(target, `Commands: ${commandList}`)
-        .then(() => console.log('Commands sent successfully!'))
-        .catch((err) => console.error('Error sending commands:', err));
-      return; // Stop further processing of the message
-    }
-
-    // Check if the message is a custom command
-    for (const { command, response } of customCommands) {
-      if (commandName === command) {
-        client
-          .say(target, response)
-          .then(() => console.log('Custom command executed successfully!'))
-          .catch((err) => console.error('Error executing custom command:', err));
-        return; // Stop further processing of the message
-      }
     }
   }
 }
-
 
 function onConnectedHandler(addr, port) {
   console.log(`* Connected to ${addr}:${port}`);
